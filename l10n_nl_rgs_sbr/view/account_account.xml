@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<openerp>
+  <data>
+
+    <!-- add reference to account list -->
+    <record id="view_account_list" model="ir.ui.view">
+      <field name="name">account.view.list.reference</field>
+      <field name="model">account.account</field>
+      <field name="inherit_id" ref="account.view_account_list"/>
+      <field name="arch" type="xml">
+        <data>
+            <field
+                name="user_type"
+                position="after"
+            >
+                <field name="reference_id" />
+            </field>
+        </data>
+      </field>
+    </record>
+
+    <!-- add reference to account form -->
+    <record id="view_account_form" model="ir.ui.view">
+      <field name="name">account.view.form.reference</field>
+      <field name="model">account.account</field>
+      <field name="inherit_id" ref="account.view_account_form"/>
+      <field name="arch" type="xml">
+        <data>
+            <field
+                name="user_type"
+                position="after"
+            >
+                <field
+                    name="reference_id"
+                    options="{'no_create': True, 'no_create_edit': True}"
+                />
+            </field>
+        </data>
+      </field>
+    </record>
+
+  </data>
+</openerp>
