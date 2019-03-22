@@ -1,59 +1,45 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    OpenERP, Open Source Management Solution
-#    This module copyright (C) 2013-2015 Therp BV (<http://therp.nl>).
-#
-#    @autors: Stefan Rijnhart, Ronald Portier
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# Copyright 2013-2019 Therp BV <https://therp.nl>
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
+# pylint: disable=attribute-defined-outside-init,invalid-name,missing-docstring
+import logging
 
-from odoo import models, api, exceptions, _
-from odoo.tools import ormcache
+from odoo import api, exceptions, models, _
+
+
+_logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
+try:
+    from ..pyPostcode.api import Api
+    from ..pyPostcode.exceptions import \
+        PostcodeException, PostcodeBadArgumentError, PostcodeValidationError
+except:  # pylint: disable=bare-except
+    _logger.warn(_("pyPostcode not found, postcode API disabled."))
+    Api = None
 
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     @api.model
-    @ormcache(skiparg=2)
     def get_provider_obj(self):
+        if not Api:
+            # pyPostcode not installed
+            return False
         apikey = self.env['ir.config_parameter'].get_param(
             'l10n_nl_postcodeapi.apikey', '').strip()
         if not apikey or apikey == 'Your API key':
             return False
-        from pyPostcode import Api
-        provider = Api(apikey, (2, 0, 0))
-        test = provider.getaddress('1053NJ', '334T')
-        if not test or not test._data:
-            raise exceptions.Warning(
-                _('Could not verify the connection with the address '
-                  'lookup service (if you want to get rid of this '
-                  'message, please rename or delete the system parameter '
-                  '\'l10n_nl_postcodeapi.apikey\').'))
-        return provider
+        return Api(apikey)
 
     @api.model
-    @ormcache(skiparg=2)
     def get_province(self, province):
-        """ Return the province or empty recordset """
+        """ Return the id for a province name or False."""
         if not province:
-            return self.env['res.country.state']
-        res = self.env['res.country.state'].search([('name', '=', province)])
-        return res[0] if res else res
+            return False
+        country_state = self.env['res.country.state'].search(
+            [('name', '=', province)], limit=1)
+        return country_state[0].id if country_state else False
 
     @api.onchange('zip', 'street_number', 'country_id')
     def on_change_zip_street_number(self):
@@ -61,21 +47,28 @@ class ResPartner(models.Model):
         Normalize the zip code, check on the partner's country and
         if all is well, request address autocompletion data.
 
-        NB. postal_code is named 'zip' in OpenERP, but is this a reserved
+        NB. postal_code is named 'zip' in Odoo, but is this a reserved
         keyword in Python
         """
-        postal_code = self.zip and self.zip.replace(' ', '')
+        if not Api:
+            return
+        postal_code = self.zip and self.zip.replace(' ', '').upper()
         country = self.country_id
         if not (postal_code and self.street_number) or \
                 country and country != self.env.ref('base.nl'):
-            return {}
-
-        provider_obj = self.get_provider_obj()
-        if not provider_obj:
-            return {}
-        pc_info = provider_obj.getaddress(postal_code, self.street_number)
-        if not pc_info or not pc_info._data:
-            return {}
-        self.street_name = pc_info.street
-        self.city = pc_info.town
-        self.state_id = self.get_province(pc_info.province)
+            return
+        try:
+            provider_obj = self.get_provider_obj()
+            if not provider_obj:
+                return
+            pc_info = provider_obj.get_postcode_info(
+                postal_code, self.street_number)
+            self.street_name = pc_info.street
+            self.city = pc_info.town
+            self.state_id = self.get_province(pc_info.province)
+        except (PostcodeBadArgumentError, PostcodeValidationError) as pc_exc:
+            raise exceptions.ValidationError(pc_exc.message)
+        except PostcodeException as pc_exc:
+            _logger.exception(
+                _("Error in communicating with Postcode API: %s"),
+                pc_exc.message)

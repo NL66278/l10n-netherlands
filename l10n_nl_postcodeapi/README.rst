@@ -15,6 +15,12 @@ auto-completed.
 
 More info about the lookup service here: http://www.postcodeapi.nu/
 
+The check on zipcode will not throw Errors in the user-interface, for
+conditons like invalid or not set Api key parameter, failing connections,
+or errors like the maximum number of lookups done. But these will cause
+warnings or errors in the log. User preventable errors, like wrong zipcodes
+will lead to validation errors.
+
 Installation
 ============
 This module depends on the module partner_street_number, which will split
@@ -31,8 +37,9 @@ Please enter the API key that you request from PostcodeAPI into the system
 parameter 'l10n_nl_postcodeapi.apikey'
 
 Provinces are autocompleted if a country state with the exact name is found in
-the system. A CSV file with the Dutch provinces is included in the data
-directory, but not loaded by default. You can import the file manually.
+the system. This module is not directly dependent on l10n_nl_country_states,
+but it is advisable to install that module to make sure all dutch
+provinces (contry states) are in the database.
 
 Compatibility
 =============
@@ -51,7 +58,8 @@ Bug Tracker
 
 Bugs are tracked on `GitHub Issues <https://github.com/OCA/l10n-netherlands/issues>`_.
 In case of trouble, please check there if your issue has already been reported.
-If you spotted it first, help us smashing it by providing a detailed and welcomed feedback.
+If you spotted it first, help us smashing it by providing a detailed and
+welcomed feedback.
 
 Credits
 =======
@@ -60,6 +68,7 @@ Contributors
 ------------
 
 * Stefan Rijnhart (Therp BV) <stefan@therp.nl>
+* Ronald Portier (Therp BV) <ronald@therp.nl>
 
 Maintainer
 ----------
@@ -70,6 +79,8 @@ Maintainer
 
 This module is maintained by the OCA at https://github.com/OCA/l10n-netherlands
 
-OCA, or the Odoo Community Association, is a nonprofit organization whose mission is to support the collaborative development of Odoo features and promote its widespread use.
+OCA, or the Odoo Community Association, is a nonprofit organization whose
+mission is to support the collaborative development of Odoo features and
+promote its widespread use.
 
 To contribute to this module, please visit http://odoo-community.org.
