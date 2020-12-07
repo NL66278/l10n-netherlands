@@ -7,6 +7,7 @@
           ref="partner_firstname.view_partner_simple_form_firstname"
       />
       <field name="arch" type="xml">
+
           <xpath expr="//field[@name='firstname']/ancestor::group[1]" position="inside">
               <div name="partner_name_dutch">
               </div>
@@ -30,44 +31,58 @@
           <xpath expr="//field[@name='lastname']" position="before">
               <field name="infix" placeholder="Infix" class="oe_inline" style="max-width: 2em" />
           </xpath>
+
       </field>
     </record>
+
     <record id="view_partner_form_firstname" model="ir.ui.view">
       <field name="name">res.partner.form.firstname</field>
       <field name="model">res.partner</field>
       <field name="inherit_id" ref="partner_firstname.view_partner_form_firstname"/>
       <field name="arch" type="xml">
-          <xpath expr="//field[@name='firstname']/ancestor::group[1]" position="inside">
-              <div name="partner_name_dutch">
-              </div>
+          <!-- Put a group after the title div for name parts. -->
+          <xpath expr="//div[hasclass('oe_title')]" position="after">
+              <group id="sub_header" colspan="6" col="1">
+                  <div name="partner_name_dutch" />
+              </group>
           </xpath>
           <xpath expr="//div[@name='partner_name_dutch']" position="inside">
               <xpath expr="//field[@name='firstname']" position="move" />
               <xpath expr="//field[@name='lastname']" position="move" />
           </xpath>
-          <xpath expr="//field[@name='lastname']" position="attributes">
-              <attribute name="placeholder">Last name</attribute>
-              <attribute name="style">max-width: calc(50% - 2.1em)</attribute>
-              <attribute name="class">oe_inline</attribute>
-              <attribute name="nolabel">1</attribute>
-          </xpath>
           <xpath expr="//field[@name='firstname']" position="attributes">
               <attribute name="placeholder">First name</attribute>
-              <attribute name="style">max-width: calc(50% - 2.1em)</attribute>
-              <attribute name="default_focus">1</attribute>
-              <attribute name="class">oe_inline</attribute>
               <attribute name="nolabel">1</attribute>
+              <attribute name="default_focus">1</attribute>
+              <attribute name="style">margin-right:1em; max-width: calc(50% - 12em)</attribute>
+          </xpath>
+          <xpath expr="//field[@name='lastname']" position="attributes">
+              <attribute name="placeholder">Last name</attribute>
+              <attribute name="nolabel">1</attribute>
+              <attribute name="style">max-width: 48%</attribute>
           </xpath>
           <xpath expr="//field[@name='firstname']" position="after">
-              <field name="initials" nolabel="1" placeholder="Initials" class="oe_inline" style="max-width: 2em" />
+              <field
+                  name="initials"
+                  nolabel="1"
+                  placeholder="Initials"
+                  class="oe_inline"
+                  style="margin-right:1em; max-width:5em;"
+                  />
           </xpath>
           <xpath expr="//field[@name='lastname']" position="before">
-              <field name="infix" nolabel="1" placeholder="Infix" class="oe_inline" style="max-width: 2em" />
+              <field
+                  name="infix"
+                  nolabel="1"
+                  placeholder="Infix"
+                  class="oe_inline"
+                  style="margin-right:1em; max-width:5em;"
+                  />
           </xpath>
           <xpath
               expr="//field[@name='child_ids']/form/sheet//group/field[@name='lastname']"
               position="after"
-          >
+              >
               <field name="initials"/>
               <field name="infix"/>
           </xpath>
